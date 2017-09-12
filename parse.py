@@ -2,17 +2,26 @@
 
 def parse_results(file):
     t = "Traversal"
-    res = []
+    r = "Rotations"
+    ts = []
+    rs = []
     with open(file) as f:
         for line in f:
             if t in line:
-                res.append(int(line.split(":")[-1].strip()))
-    return res
+                ts.append(int(line.split(":")[-1].strip()))
+            if r in line:
+                rs.append(int(line.split(":")[-1].strip()))
+    return ts, rs
 
 def main():
-    res=parse_results("results_avl.txt")
-    print(max(res))
-    print(float(sum(res)) / len(res))
+    ts, rs=parse_results("results_avl.txt")
+
+    print("Max traversal: %d" % max(ts))
+    print("Average traversal: %f" % (float(sum(ts)) / len(ts)))
+
+    print("Max rotations: %d" % max(rs))
+    print("Average rotations: %f" % (float(sum(rs)) / len(rs)))
+
 
 if __name__ == '__main__':
     main()

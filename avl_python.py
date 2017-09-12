@@ -331,55 +331,12 @@ class AvlTree(object):
         # the path only contains nodes whose keys are <= x
         # we know x is in the path
         assert path[-1].key == x
-        to_rebalance = path.pop()
+        to_rebalance = path[-1]
 
         if to_rebalance.right is not None:
             # all bigger than x must go
             to_rebalance.right = None
-            to_rebalance.height = 1
-
-        if to_rebalance.left is not None:
-            # to_rebalance has no right child but it has a left child
-            # thus, we insert to_rebalance into its left child to create
-            # a balanced tree
-            sub_root = to_rebalance.left
-            to_rebalance.left = None
-            sub_root = sub_root.insert(to_rebalance.key, to_rebalance.value)
-
-            if len(path) > 0:
-                assert path[-1].right is to_rebalance
-                path[-1].right = None
-                AvlNode.LinkNodes(path[-1], sub_root)
-                path.append(sub_root)
-            else:
-                # sub_root is a balanced tree
-                self.root = sub_root
-                return
-
-        elif len(path) > 0:
-            if path[-1].left is not None:
-
-                #              p
-                # left_sub_tree  to_rebalance
-                # insert p and x into left_sub_tree
-                p = path.pop()
-                assert p.right is to_rebalance
-                root = p.left
-                p.left = None
-                p.right = None
-                root = root.insert(to_rebalance.key, to_rebalance.value)
-                root = root.insert(p.key, p.value)
-                if len(path) > 0:
-                    AvlNode.UnlinkNodes(path[-1], p)
-                    AvlNode.LinkNodes(path[-1], root)
-                    path.append(root)
-                else:
-                    # root is the only node left and is a balanced tree
-                    self.root = root
-                    return
-        else:
-            self.root = to_rebalance
-            return
+            to_rebalance.set_height()
 
         root = AvlNode(float("-inf"), None)
 
@@ -411,55 +368,12 @@ class AvlTree(object):
         # the path only contains nodes whose keys are >= x
         # we know x is in the path
         assert path[-1].key == x
-        to_rebalance = path.pop()
+        to_rebalance = path[-1]#.pop()
 
         if to_rebalance.left is not None:
             # all lesser than x must go
             to_rebalance.left = None
-            to_rebalance.height = 1
-
-        if to_rebalance.right is not None:
-            # to_rebalance has no left child but it has a right child
-            # thus, we insert to_rebalance into its right child to create
-            # a balanced tree
-            sub_root = to_rebalance.right
-            to_rebalance.right = None
-            sub_root = sub_root.insert(to_rebalance.key, to_rebalance.value)
-
-            if len(path) > 0:
-                assert path[-1].left is to_rebalance
-                path[-1].left = None
-                AvlNode.LinkNodes(path[-1], sub_root)
-                path.append(sub_root)
-            else:
-                # sub_root is a balanced tree
-                self.root = sub_root
-                return
-
-        elif len(path) > 0:
-            if path[-1].right is not None:
-
-                #              p
-                # to_rebalance  right_sub_tree
-                # insert p and x into right_sub_tree
-                p = path.pop()
-                assert p.left is to_rebalance
-                root = p.right
-                p.left = None
-                p.right = None
-                root = root.insert(to_rebalance.key, to_rebalance.value)
-                root = root.insert(p.key, p.value)
-                if len(path) > 0:
-                    AvlNode.UnlinkNodes(path[-1], p)
-                    AvlNode.LinkNodes(path[-1], root)
-                    path.append(root)
-                else:
-                    # root is the only node left and is a balanced tree
-                    self.root = root
-                    return
-        else:
-            self.root = to_rebalance
-            return
+            to_rebalance.set_height()
 
         root = AvlNode(float("-inf"), None)
 
