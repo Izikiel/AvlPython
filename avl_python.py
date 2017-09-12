@@ -385,9 +385,8 @@ class AvlTree(object):
 
         AvlNode.ReBalanceRightist(root, path[0])
         self.root = root.right
-
+        AvlNode.UnlinkNodes(root, self.root)
         assert abs(AvlNode.BalanceFactor(self.root)) < 2
-        assert self.root.is_balanced()
 
     def remove_below(self, x):
         """
@@ -466,7 +465,7 @@ class AvlTree(object):
 
         AvlNode.ReBalanceLeftist(root, path[0])
         self.root = root.right
-
+        AvlNode.UnlinkNodes(root, self.root)
         assert abs(AvlNode.BalanceFactor(self.root)) < 2
 
 
