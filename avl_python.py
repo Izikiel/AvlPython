@@ -468,18 +468,17 @@ class AvlTree(object):
         self.root = root.right
 
         assert abs(AvlNode.BalanceFactor(self.root)) < 2
-        assert self.root.is_balanced()
 
 
 if __name__ == '__main__':
     original_tree = AvlTree()
 
-    size = 10000
+    size = 1000
 
     for i in xrange(size):
         original_tree.insert(i, i)
 
-    assert original_tree.root.is_balanced()
+    assert original_tree.root.is_balanced(), "There is problem rebalancing during insert!"
 
     for i in xrange(size):
         new_tree = original_tree.copy()
@@ -493,11 +492,7 @@ if __name__ == '__main__':
             print("Failed at iteration: %d" % i)
             raise
 
-        try:
-            assert new_tree.root.is_balanced()
-        except Exception:
-            print("Failed at iteration: %d" % i)
-            raise
+        assert new_tree.root.is_balanced(), "Failed at iteration: %d" %i
 
         for x in xrange(i + 1, size):
             assert new_tree.search(x) is None
@@ -520,11 +515,7 @@ if __name__ == '__main__':
             print("Failed at iteration: %d" % i)
             raise
 
-        try:
-            assert new_tree.root.is_balanced()
-        except Exception:
-            print("Failed at iteration: %d" % i)
-            raise
+        assert new_tree.root.is_balanced(), "Failed at iteration: %d" %i
 
         for x in xrange(i):
             assert new_tree.search(x) is None
