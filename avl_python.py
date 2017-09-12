@@ -368,7 +368,7 @@ class AvlTree(object):
         # the path only contains nodes whose keys are >= x
         # we know x is in the path
         assert path[-1].key == x
-        to_rebalance = path[-1]#.pop()
+        to_rebalance = path[-1]
 
         if to_rebalance.left is not None:
             # all lesser than x must go
@@ -386,7 +386,7 @@ class AvlTree(object):
 if __name__ == '__main__':
     original_tree = AvlTree()
 
-    size = 1000
+    size = 10000
 
     for i in xrange(size):
         original_tree.insert(i, i)
