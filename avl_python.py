@@ -255,7 +255,7 @@ class AvlNode(object):
 
         to_delete = path.pop()
         if to_delete.key != key:
-            return
+            return root
 
         # 2 children
         if to_delete.left is not None and to_delete.right is not None:
