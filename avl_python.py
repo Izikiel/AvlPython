@@ -87,18 +87,14 @@ class AvlNode(object):
 
     @staticmethod
     def ReBalanceLeftist(parent, node):
-        assert parent is not None
-        while node is not None:
-            if AvlNode.Track:
-                AvlNode.TraversalCount += 1
-            AvlNode.UnlinkNodes(parent, node)
-            node = AvlNode.ReBalance(node)
-            AvlNode.LinkNodes(parent, node)
-            parent = node
-            node = node.left
+        AvlNode.ReBalanceBranch(parent, node, "left")
 
     @staticmethod
     def ReBalanceRightist(parent, node):
+        AvlNode.ReBalanceBranch(parent, node, "right")
+
+    @staticmethod
+    def ReBalanceBranch(parent, node, branch):
         assert parent is not None
         while node is not None:
             if AvlNode.Track:
@@ -107,7 +103,7 @@ class AvlNode(object):
             node = AvlNode.ReBalance(node)
             AvlNode.LinkNodes(parent, node)
             parent = node
-            node = node.right
+            node = getattr(node, branch)
 
     @staticmethod
     def BalanceFactor(node):
