@@ -1,6 +1,3 @@
-import itertools
-import random
-
 try:
     xrange is None
 except NameError:
@@ -124,6 +121,62 @@ class AvlNode(object):
             right = node.right.height
         return right - left
 
+    @staticmethod
+    def ReBalancePath(path):
+        while len(path) > 1:
+            to_rebalance = path.pop()
+            parent = path[-1]
+            to_rebalance.set_height()
+
+            if parent.right is to_rebalance:
+                parent.right = AvlNode.ReBalance(to_rebalance)
+            if parent.left is to_rebalance:
+                parent.left = AvlNode.ReBalance(to_rebalance)
+
+        return AvlNode.ReBalance(path.pop())
+
+    @staticmethod
+    def DeleteNode(root, key):
+        path = root.path_to_key(key)
+
+        to_delete = path.pop()
+        if to_delete.key != key:
+            return root
+
+        # 2 children
+        if to_delete.left is not None and to_delete.right is not None:
+            successor = to_delete.successor(to_delete.key)
+
+            path = root.path_to_key(successor.key)
+            assert path[-1] is successor
+            path.pop()
+            to_delete.key = successor.key
+            to_delete.value = successor.value
+            to_delete = successor
+
+        # One or zero children
+        next_node = None
+        if to_delete.left is not None and to_delete.right is None:
+            next_node = to_delete.left
+        else:
+            next_node = to_delete.right
+
+        if next_node is not None:
+            AvlNode.UnlinkNodes(to_delete, next_node)
+
+        # We are the root
+        if len(path) == 0:
+            return next_node
+
+        parent = path[-1]
+        AvlNode.UnlinkNodes(parent, to_delete)
+
+        if next_node is not None:
+            AvlNode.LinkNodes(parent, next_node)
+            path.append(next_node)
+
+        return AvlNode.ReBalancePath(path)
+
     def set_height(self):
         left = 0
         right = 0
@@ -152,20 +205,6 @@ class AvlNode(object):
             else:
                 break
         return path
-
-    @staticmethod
-    def ReBalancePath(path):
-        while len(path) > 1:
-            to_rebalance = path.pop()
-            parent = path[-1]
-            to_rebalance.set_height()
-
-            if parent.right is to_rebalance:
-                parent.right = AvlNode.ReBalance(to_rebalance)
-            if parent.left is to_rebalance:
-                parent.left = AvlNode.ReBalance(to_rebalance)
-
-        return AvlNode.ReBalance(path.pop())
 
     def insert(self, key, value):
         path = self.path_to_key(key)
@@ -245,48 +284,6 @@ class AvlNode(object):
                 break
         return predecessor
 
-    @staticmethod
-    def DeleteNode(root, key):
-        path = root.path_to_key(key)
-
-        to_delete = path.pop()
-        if to_delete.key != key:
-            return root
-
-        # 2 children
-        if to_delete.left is not None and to_delete.right is not None:
-            successor = to_delete.successor(to_delete.key)
-
-            path = root.path_to_key(successor.key)
-            assert path[-1] is successor
-            path.pop()
-            to_delete.key = successor.key
-            to_delete.value = successor.value
-            to_delete = successor
-
-        # One or zero children
-        next_node = None
-        if to_delete.left is not None and to_delete.right is None:
-            next_node = to_delete.left
-        else:
-            next_node = to_delete.right
-
-        if next_node is not None:
-            AvlNode.UnlinkNodes(to_delete, next_node)
-
-        # We are the root
-        if len(path) == 0:
-            return next_node
-
-        parent = path[-1]
-        AvlNode.UnlinkNodes(parent, to_delete)
-
-        if next_node is not None:
-            AvlNode.LinkNodes(parent, next_node)
-            path.append(next_node)
-
-        return AvlNode.ReBalancePath(path)
-
     def is_balanced(self):
         children = [self.left, self.right]
         for c in children:
@@ -309,7 +306,11 @@ class AvlNode(object):
         return True
 
     def __repr__(self):
-        return "K: {0} V: {1} H:{2}".format(*[self.key, self.value, self.height])
+        return "K: {0} V: {1} H:{2}".format(*[
+            self.key,
+            self.value,
+            self.height
+        ])
 
     def copy(self):
         node = AvlNode(self.key, self.value)
@@ -438,7 +439,7 @@ class AvlTree(object):
 if __name__ == '__main__':
     original_tree = AvlTree()
 
-    size = 25
+    size = 1000
 
     for i in xrange(size):
         original_tree.insert(i, i)
@@ -462,67 +463,74 @@ if __name__ == '__main__':
                 order.append(new_tree.root.key)
                 new_tree.delete(new_tree.root.key)
                 assert new_tree.is_balanced(), "root"
-        except Exception as e:
+        except Exception:
             print(order)
-            raise e
+            raise
 
+    new_tree = original_tree.copy()
+    for i in xrange(size):
+        try:
+            new_tree.delete(i)
+        except Exception:
+            print("Failed at iteration: %d" % i)
+            raise
+        assert new_tree.is_balanced(), "Fallo delete"
 
-    # new_tree = original_tree.copy()
-    # for i in xrange(size):
-    #     try:
-    #         new_tree.delete(i)
-    #     except Exception:
-    #         print("Failed at iteration: %d" % i)
-    #         raise
-    #     assert new_tree.is_balanced(), "Fallo delete"
+    new_tree = original_tree.copy()
+    for i in xrange(size, -1, -1):
+        try:
+            new_tree.delete(i)
+        except Exception:
+            print("Failed at iteration: %d" % i)
+            raise
+        assert new_tree.is_balanced(), "Fallo delete reverse"
 
+    for i in xrange(size):
+        new_tree = original_tree.copy()
 
-    # for i in xrange(size):
-    #     new_tree = original_tree.copy()
+        AvlNode.Track = True
+        AvlNode.RotationCount = 0
+        AvlNode.TraversalCount = 0
+        try:
+            new_tree.remove_above(i)
+        except Exception:
+            print("Failed at iteration: %d" % i)
+            raise
 
-    #     AvlNode.Track = True
-    #     AvlNode.RotationCount = 0
-    #     AvlNode.TraversalCount = 0
-    #     try:
-    #         new_tree.remove_above(i)
-    #     except Exception:
-    #         print("Failed at iteration: %d" % i)
-    #         raise
+        assert new_tree.is_balanced(), "Failed at iteration: %d" % i
 
-    #     assert new_tree.is_balanced(), "Failed at iteration: %d" % i
+        for x in xrange(i + 1, size):
+            assert new_tree.search(x) is None
 
-    #     for x in xrange(i + 1, size):
-    #         assert new_tree.search(x) is None
+        print("#####################################################")
+        print("Upper bound: %d" % i)
+        print("Height: %d" % new_tree.root.height)
+        print("Rotations: %d" % AvlNode.RotationCount)
+        print("Traversal count: %d" % AvlNode.TraversalCount)
 
-    #     print("#####################################################")
-    #     print("Upper bound: %d" % i)
-    #     print("Height: %d" % new_tree.root.height)
-    #     print("Rotations: %d" % AvlNode.RotationCount)
-    #     print("Traversal count: %d" % AvlNode.TraversalCount)
+    for i in xrange(size):
+        new_tree = original_tree.copy()
 
-    # for i in xrange(size):
-    #     new_tree = original_tree.copy()
+        AvlNode.Track = True
+        AvlNode.RotationCount = 0
+        AvlNode.TraversalCount = 0
+        try:
+            new_tree.remove_below(i)
+        except Exception:
+            print("Failed at iteration: %d" % i)
+            raise
 
-    #     AvlNode.Track = True
-    #     AvlNode.RotationCount = 0
-    #     AvlNode.TraversalCount = 0
-    #     try:
-    #         new_tree.remove_below(i)
-    #     except Exception:
-    #         print("Failed at iteration: %d" % i)
-    #         raise
+        assert new_tree.is_balanced(), "Failed at iteration: %d" % i
 
-    #     assert new_tree.is_balanced(), "Failed at iteration: %d" % i
+        for x in xrange(i):
+            assert new_tree.search(x) is None
 
-    #     for x in xrange(i):
-    #         assert new_tree.search(x) is None
+        print("#####################################################")
+        print("Lower bound: %d" % i)
+        print("Height: %d" % new_tree.root.height)
+        print("Rotations: %d" % AvlNode.RotationCount)
+        print("Traversal count: %d" % AvlNode.TraversalCount)
 
-    #     print("#####################################################")
-    #     print("Lower bound: %d" % i)
-    #     print("Height: %d" % new_tree.root.height)
-    #     print("Rotations: %d" % AvlNode.RotationCount)
-    #     print("Traversal count: %d" % AvlNode.TraversalCount)
-
-    # print("#####################################################")
+    print("#####################################################")
 
     print("Done!")
