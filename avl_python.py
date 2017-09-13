@@ -86,14 +86,6 @@ class AvlNode(object):
         return node
 
     @staticmethod
-    def ReBalanceLeftist(parent, node):
-        AvlNode.ReBalanceBranch(parent, node, "left")
-
-    @staticmethod
-    def ReBalanceRightist(parent, node):
-        AvlNode.ReBalanceBranch(parent, node, "right")
-
-    @staticmethod
     def ReBalanceBranch(parent, node, branch):
         assert parent is not None
         while node is not None:
@@ -350,75 +342,52 @@ class AvlTree(object):
         self.remove_above(upper)
 
     def remove_above(self, x):
-        """
-        self: avl tree
-        x: upper limit
-        """
+        predicate_gen = lambda x: lambda e: e.key <= x
+        branch = "right"
+
         node = self.root.search(x)
 
         if node is None:
             x = self.root.predecessor(x).key
 
-        path = self.root.path_to_key(x)  # root -> ... -> x
-
-        for i in xrange(len(path) - 1):
-            AvlNode.UnlinkNodes(path[i], path[i + 1])
-        # si fuera c++ habria que borrar explicitamente los nodos aca
-        path = list(filter(lambda e: e.key <= x, path))
-
-        for i in xrange(len(path) - 1, 0, -1):
-            AvlNode.LinkNodes(path[i - 1], path[i])
-
-        # the path only contains nodes whose keys are <= x
-        # we know x is in the path
-        assert path[-1].key == x
-        to_rebalance = path[-1]
-
-        if to_rebalance.right is not None:
-            # all bigger than x must go
-            to_rebalance.right = None
-            to_rebalance.set_height()
-
-        root = AvlNode(float("-inf"), None)
-
-        AvlNode.ReBalanceRightist(root, path[0])
-        self.root = root.right
-        AvlNode.UnlinkNodes(root, self.root)
-        assert abs(AvlNode.BalanceFactor(self.root)) < 2
+        self.remove_with_predicate(x, predicate_gen(x), branch)
 
     def remove_below(self, x):
-        """
-        self: avl tree
-        x: lower limit
-        """
+        predicate_gen = lambda x: lambda e: e.key >= x
+        branch = "left"
+
         node = self.root.search(x)
 
         if node is None:
-            x = self.root.successor(x).key
+            x = self.root.predecessor(x).key
 
+        self.remove_with_predicate(x, predicate_gen(x), branch)
+
+    def remove_with_predicate(self, x, predicate, branch):
         path = self.root.path_to_key(x)  # root -> ... -> x
 
         for i in xrange(len(path) - 1):
             AvlNode.UnlinkNodes(path[i], path[i + 1])
         # si fuera c++ habria que borrar explicitamente los nodos aca
-        path = list(filter(lambda e: e.key >= x, path))
+        path = list(filter(predicate, path))
 
         for i in xrange(len(path) - 1, 0, -1):
             AvlNode.LinkNodes(path[i - 1], path[i])
 
-        # the path only contains nodes whose keys are >= x
+        # the path only contains nodes whose predicate(key) == True
         # we know x is in the path
         assert path[-1].key == x
         to_rebalance = path[-1]
 
-        if to_rebalance.left is not None:
-            # all lesser than x must go
-            to_rebalance.left = None
+        if getattr(to_rebalance, branch) is not None:
+            # branch must go away
+            setattr(to_rebalance, branch, None)
             to_rebalance.set_height()
 
         root = AvlNode(float("-inf"), None)
 
-        AvlNode.ReBalanceLeftist(root, path[0])
+        AvlNode.ReBalanceBranch(root, path[0], branch)
+
         self.root = root.right
         AvlNode.UnlinkNodes(root, self.root)
         assert abs(AvlNode.BalanceFactor(self.root)) < 2
