@@ -32,8 +32,6 @@ class AvlNode(object):
         node.set_height()
         going_up.set_height()
 
-        assert abs(AvlNode.BalanceFactor(going_up)) < 2
-
         return going_up
 
     @staticmethod
@@ -46,8 +44,6 @@ class AvlNode(object):
 
         node.set_height()
         going_up.set_height()
-
-        assert abs(AvlNode.BalanceFactor(going_up)) < 2
 
         return going_up
 
@@ -435,17 +431,41 @@ class AvlTree(object):
             return self.root.is_balanced()
         return True
 
+    def is_empty(self):
+        return self.root is None
+
 
 if __name__ == '__main__':
     original_tree = AvlTree()
 
-    size = 1000
+    size = 25
 
     for i in xrange(size):
         original_tree.insert(i, i)
 
     assert original_tree.is_balanced(), "There is problem rebalancing during insert!"
     print(original_tree.root.height)
+
+    new_tree = original_tree.copy()
+    order = []
+    while not new_tree.is_empty():
+        try:
+            if new_tree.root.right is not None:
+                order.append(new_tree.root.right.key)
+                new_tree.delete(new_tree.root.right.key)
+                assert new_tree.is_balanced(), "right"
+            if new_tree.root.left is not None:
+                order.append(new_tree.root.left.key)
+                new_tree.delete(new_tree.root.left.key)
+                assert new_tree.is_balanced(), "left"
+            if new_tree.root is not None:
+                order.append(new_tree.root.key)
+                new_tree.delete(new_tree.root.key)
+                assert new_tree.is_balanced(), "root"
+        except Exception as e:
+            print(order)
+            raise e
+
 
     # new_tree = original_tree.copy()
     # for i in xrange(size):
@@ -456,22 +476,6 @@ if __name__ == '__main__':
     #         raise
     #     assert new_tree.is_balanced(), "Fallo delete"
 
-    # random deletion
-    # numbers = itertools.permutations(range(size))
-    numbers = list(range(size))
-    # for i, p in enumerate(numbers):
-    while True:
-        new_tree = original_tree.copy()
-        p = numbers
-        random.shuffle(p)
-        for x in xrange(len(p) - 1, -1, -1):
-            try:
-                new_tree.delete(x)
-            except Exception:
-                print("Failed when deleting random")
-                print(p)
-                raise
-            assert new_tree.is_balanced(), "Fallo delete random"
 
     # for i in xrange(size):
     #     new_tree = original_tree.copy()
