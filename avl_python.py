@@ -278,6 +278,7 @@ class AvlNode(object):
         if next_node is not None:
             AvlNode.UnlinkNodes(to_delete, next_node)
 
+        # We are the root
         if len(path) == 0:
             return next_node
 
