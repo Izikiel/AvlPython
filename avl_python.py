@@ -1,3 +1,5 @@
+import itertools
+import random
 
 try:
     xrange is None
@@ -170,13 +172,14 @@ class AvlNode(object):
         return AvlNode.ReBalance(path.pop())
 
     def insert(self, key, value):
-        node = self.search(key)
-        if node is not None:
+        path = self.path_to_key(key)
+        node = path[-1]
+
+        if node.key == key:
             node.value = value
-            return
+            return node
 
         # we know now that the key is not in the tree
-        path = self.path_to_key(key)
         parent = path[-1]
 
         node = AvlNode(key, value)
@@ -246,6 +249,47 @@ class AvlNode(object):
                 break
         return predecessor
 
+    @staticmethod
+    def DeleteNode(root, key):
+        path = root.path_to_key(key)
+
+        to_delete = path.pop()
+        if to_delete.key != key:
+            return
+
+        # 2 children
+        if to_delete.left is not None and to_delete.right is not None:
+            successor = to_delete.successor(to_delete.key)
+
+            path = root.path_to_key(successor.key)
+            assert path[-1] is successor
+            path.pop()
+            to_delete.key = successor.key
+            to_delete.value = successor.value
+            to_delete = successor
+
+        # One or zero children
+        next_node = None
+        if to_delete.left is not None and to_delete.right is None:
+            next_node = to_delete.left
+        else:
+            next_node = to_delete.right
+
+        if next_node is not None:
+            AvlNode.UnlinkNodes(to_delete, next_node)
+
+        if len(path) == 0:
+            return next_node
+
+        parent = path[-1]
+        AvlNode.UnlinkNodes(parent, to_delete)
+
+        if next_node is not None:
+            AvlNode.LinkNodes(parent, next_node)
+            path.append(next_node)
+
+        return AvlNode.ReBalancePath(path)
+
     def is_balanced(self):
         children = [self.left, self.right]
         for c in children:
@@ -303,6 +347,9 @@ class AvlTree(object):
             self.root = AvlNode(key, value)
         else:
             self.root = self.root.insert(key, value)
+
+    def delete(self, key):
+        self.root = AvlNode.DeleteNode(self.root, key)
 
     def remove_range(self, lower, upper):
         self.remove_below(lower)
@@ -382,64 +429,95 @@ class AvlTree(object):
         AvlNode.UnlinkNodes(root, self.root)
         assert abs(AvlNode.BalanceFactor(self.root)) < 2
 
+    def is_balanced(self):
+        if self.root is not None:
+            return self.root.is_balanced()
+        return True
+
 
 if __name__ == '__main__':
     original_tree = AvlTree()
 
-    size = 10000
+    size = 1000
 
     for i in xrange(size):
         original_tree.insert(i, i)
 
-    assert original_tree.root.is_balanced(), "There is problem rebalancing during insert!"
+    assert original_tree.is_balanced(), "There is problem rebalancing during insert!"
+    print(original_tree.root.height)
 
-    for i in xrange(size):
+    # new_tree = original_tree.copy()
+    # for i in xrange(size):
+    #     try:
+    #         new_tree.delete(i)
+    #     except Exception:
+    #         print("Failed at iteration: %d" % i)
+    #         raise
+    #     assert new_tree.is_balanced(), "Fallo delete"
+
+    # random deletion
+    # numbers = itertools.permutations(range(size))
+    numbers = list(range(size))
+    # for i, p in enumerate(numbers):
+    while True:
         new_tree = original_tree.copy()
+        p = numbers
+        random.shuffle(p)
+        for x in xrange(len(p) - 1, -1, -1):
+            try:
+                new_tree.delete(x)
+            except Exception:
+                print("Failed when deleting random")
+                print(p)
+                raise
+            assert new_tree.is_balanced(), "Fallo delete random"
 
-        AvlNode.Track = True
-        AvlNode.RotationCount = 0
-        AvlNode.TraversalCount = 0
-        try:
-            new_tree.remove_above(i)
-        except Exception:
-            print("Failed at iteration: %d" % i)
-            raise
+    # for i in xrange(size):
+    #     new_tree = original_tree.copy()
 
-        assert new_tree.root.is_balanced(), "Failed at iteration: %d" %i
+    #     AvlNode.Track = True
+    #     AvlNode.RotationCount = 0
+    #     AvlNode.TraversalCount = 0
+    #     try:
+    #         new_tree.remove_above(i)
+    #     except Exception:
+    #         print("Failed at iteration: %d" % i)
+    #         raise
 
-        for x in xrange(i + 1, size):
-            assert new_tree.search(x) is None
+    #     assert new_tree.is_balanced(), "Failed at iteration: %d" % i
 
-        print("#####################################################")
-        print("Upper bound: %d" % i)
-        print("Height: %d" % new_tree.root.height)
-        print("Rotations: %d" % AvlNode.RotationCount)
-        print("Traversal count: %d" % AvlNode.TraversalCount)
+    #     for x in xrange(i + 1, size):
+    #         assert new_tree.search(x) is None
 
-    for i in xrange(size):
-        new_tree = original_tree.copy()
+    #     print("#####################################################")
+    #     print("Upper bound: %d" % i)
+    #     print("Height: %d" % new_tree.root.height)
+    #     print("Rotations: %d" % AvlNode.RotationCount)
+    #     print("Traversal count: %d" % AvlNode.TraversalCount)
 
-        AvlNode.Track = True
-        AvlNode.RotationCount = 0
-        AvlNode.TraversalCount = 0
-        try:
-            new_tree.remove_below(i)
-        except Exception:
-            print("Failed at iteration: %d" % i)
-            raise
+    # for i in xrange(size):
+    #     new_tree = original_tree.copy()
 
-        assert new_tree.root.is_balanced(), "Failed at iteration: %d" %i
+    #     AvlNode.Track = True
+    #     AvlNode.RotationCount = 0
+    #     AvlNode.TraversalCount = 0
+    #     try:
+    #         new_tree.remove_below(i)
+    #     except Exception:
+    #         print("Failed at iteration: %d" % i)
+    #         raise
 
-        for x in xrange(i):
-            assert new_tree.search(x) is None
+    #     assert new_tree.is_balanced(), "Failed at iteration: %d" % i
 
-        print("#####################################################")
-        print("Lower bound: %d" % i)
-        print("Height: %d" % new_tree.root.height)
-        print("Rotations: %d" % AvlNode.RotationCount)
-        print("Traversal count: %d" % AvlNode.TraversalCount)
+    #     for x in xrange(i):
+    #         assert new_tree.search(x) is None
 
+    #     print("#####################################################")
+    #     print("Lower bound: %d" % i)
+    #     print("Height: %d" % new_tree.root.height)
+    #     print("Rotations: %d" % AvlNode.RotationCount)
+    #     print("Traversal count: %d" % AvlNode.TraversalCount)
 
-    print("#####################################################")
+    # print("#####################################################")
 
     print("Done!")
