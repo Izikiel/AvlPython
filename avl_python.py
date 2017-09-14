@@ -342,7 +342,9 @@ class AvlTree(object):
         self.remove_above(upper)
 
     def remove_above(self, x):
-        predicate_gen = lambda x: lambda e: e.key <= x
+        def predicate_gen(x):
+            return lambda e: e.key <= x
+
         branch = "right"
 
         node = self.root.search(x)
@@ -353,7 +355,9 @@ class AvlTree(object):
         self.remove_with_predicate(x, predicate_gen(x), branch)
 
     def remove_below(self, x):
-        predicate_gen = lambda x: lambda e: e.key >= x
+        def predicate_gen(x):
+            return lambda e: e.key >= x
+
         branch = "left"
 
         node = self.root.search(x)
