@@ -2,7 +2,6 @@ try:
     xrange is None
 except NameError:
     xrange = range
-    
 
 
 class AvlNode(object):
@@ -67,31 +66,31 @@ class AvlNode(object):
     def ReBalance(node):
         bf = AvlNode.BalanceFactor(node)
 
-        if abs(bf) > 1:
-            if AvlNode.Track:
-                AvlNode.RotationCount += 1
-            if bf > 0:
-                if AvlNode.BalanceFactor(node.right) < 0:
-                    # double rotation
-                    # right rotation node.right
-                    node.right = AvlNode.RightRotation(node.right)
-                # left rotation
-                return AvlNode.LeftRotation(node)
-            else:
-                if AvlNode.BalanceFactor(node.left) > 0:
-                    # double rotation
-                    # left rotation node.left
-                    node.left = AvlNode.LeftRotation(node.left)
-                # right rotaion
-                return AvlNode.RightRotation(node)
-        return node
+        if abs(bf) < 2:
+            return node
+
+        AvlNode.RotationCount += int(AvlNode.Track)
+
+        if bf > 0:
+            if AvlNode.BalanceFactor(node.right) < 0:
+                # double rotation
+                # right rotation node.right
+                node.right = AvlNode.RightRotation(node.right)
+            # left rotation
+            return AvlNode.LeftRotation(node)
+        else:
+            if AvlNode.BalanceFactor(node.left) > 0:
+                # double rotation
+                # left rotation node.left
+                node.left = AvlNode.LeftRotation(node.left)
+            # right rotaion
+            return AvlNode.RightRotation(node)
 
     @staticmethod
     def ReBalanceBranch(parent, node, branch):
         assert parent is not None
         while node is not None:
-            if AvlNode.Track:
-                AvlNode.TraversalCount += 1
+            AvlNode.TraversalCount += int(AvlNode.Track)
             AvlNode.UnlinkNodes(parent, node)
             node = AvlNode.ReBalance(node)
             AvlNode.LinkNodes(parent, node)
@@ -145,13 +144,12 @@ class AvlNode(object):
 
         # One or zero children
         next_node = None
-        if to_delete.left is not None and to_delete.right is None:
+        if to_delete.left is not None:
             next_node = to_delete.left
         else:
             next_node = to_delete.right
 
-        if next_node is not None:
-            AvlNode.UnlinkNodes(to_delete, next_node)
+        AvlNode.UnlinkNodes(to_delete, next_node)
 
         # We are the root
         if len(path) == 0:
@@ -364,7 +362,7 @@ class AvlTree(object):
         node = self.root.search(x)
 
         if node is None:
-            x = self.root.predecessor(x).key
+            x = self.root.successor(x).key
 
         self.remove_with_predicate(x, predicate_gen(x), branch)
 
